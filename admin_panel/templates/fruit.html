@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>Фрукты</h1>
+    {% for fruit in object_list %}
+    <p>
+        <ul>
+            <li>Название: {{ fruit.name }}</li>
+            <li>Кол-во: {{ fruit.count }}</li>
+            <li>Цена закупки: {{ fruit.price_buy }}</li>
+            <li>Цена реализации: {{ fruit.price_sell }}</li>
+        </ul>
+    </p>
+    {% empty %}
+    <p>
+        Нет фруктов
+    </p>
+    {% endfor %}
+</body>
+</html>
