@@ -9,3 +9,7 @@ class Fruit(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Wallet(models.Model):
+    money = models.FloatField(default=0)

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 
-from .models import Fruit
+from .models import Fruit, Wallet
 from .forms import FruitForm
 from .tasks import replenishment_warehouse
 
@@ -16,3 +16,14 @@ class FruitView(ListView):
         # replenishment_warehouse.delay()
 
         return queryset
+
+
+def main_page(request):
+    fruits = Fruit.objects.all()
+
+    data = {
+        'object_list': fruits,
+        'wallet': Wallet.objects.get(pk=1)
+    }
+    return render(request, 'fruit.html', data)
+

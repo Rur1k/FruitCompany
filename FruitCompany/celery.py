@@ -47,4 +47,15 @@ app.conf.beat_schedule = {
     },
 }
 
+# app.conf.beat_schedule = {
+#     'add-apple-every-6-second': {
+#         'task': 'admin_panel.tasks.replenishment_warehouse_apple_wallet',
+#         'schedule': timedelta(seconds=6),
+#     },
+#     'sell-apple-every-15-second': {
+#         'task': 'admin_panel.tasks.sell_apple_wallet',
+#         'schedule': timedelta(seconds=15),
+#     },
+# }
+
 

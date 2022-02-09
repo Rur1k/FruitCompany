@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # apps
     'admin_panel',
+    # 'channels',
 ]
 
 MIDDLEWARE = [
@@ -124,3 +125,16 @@ CELERY_TASK_TIME_LIMIT = 1 * 60
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Конфигурация Channels
+
+# ASGI_APPLICATION = "admin_panel.routing.application"
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('127.0.0.1', 6379)],
+#             "symmetric_encryption_keys": [SECRET_KEY],
+#         },
+#     },
+# }
