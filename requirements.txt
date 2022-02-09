@@ -2,3 +2,6 @@ Django==3.2.4
 python-dotenv
 celery
 redis
+flower
+channels
+channels-redis
