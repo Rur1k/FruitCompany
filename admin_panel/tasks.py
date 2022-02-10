@@ -33,7 +33,10 @@ def replenishment_warehouse_fruit(fruit_id, start=None, stop=None, step=None):
         'warehouse',
         {
             'type': 'log',
-            'log': result
+            'log': result,
+            'fruit_id': fruit_id,
+            'count_fruit': obj.count,
+            'wallet_money': wallet.money
         }
     )
 
@@ -58,6 +61,9 @@ def sell_fruit(fruit_id, start=None, stop=None, step=None):
         'warehouse',
         {
             'type': 'log',
-            'log': result
+            'log': result,
+            'fruit_id': fruit_id,
+            'count_fruit': obj.count,
+            'wallet_money': wallet.money
         }
     )

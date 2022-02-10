@@ -9,7 +9,7 @@
         <div class="col-md-5 border" style="margin:1%; padding:1%">
             <ul>
                 <li>Название: {{ fruit.name }}</li>
-                <li>Кол-во: {{ fruit.count }} <spap></spap></li>
+                <li>Кол-во: <span id="fruit-{{fruit.id}}">0</span></li>
                 <li>Цена закупки: {{ fruit.price_buy }}</li>
                 <li>Цена реализации: {{ fruit.price_sell }}</li>
             </ul>
@@ -26,7 +26,7 @@
         {% endfor %}
         <div class="col-md-5 border text-center" style="margin:1%; padding:1%">
             <h1 >Кошелек</h1>
-            <label>Денег на счету:</label> {{ wallet.money }} usd
+            <label>Денег на счету:</label> <span id="wallet">0</span> usd
             <input type="text" class="form-control">
             <div class="col-md-12 text-center" style="margin-top:2%">
                 <button class="btn btn-outline-secondary">Добавить</button>
@@ -64,7 +64,14 @@
    logSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
         var log = data['log'];
+        var fruit_id = data['fruit_id'];
+        var count_fruit = data['count_fruit'];
+        var wallet_money = data['wallet_money'];
+
         document.querySelector('#task-log').value += (log+'\n');
+        document.getElementById('fruit-'+fruit_id).textContent = count_fruit;
+        document.getElementById('wallet').textContent = wallet_money;
+
     };
 
     chatSocket.onclose = function(e) {

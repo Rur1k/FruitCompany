@@ -57,7 +57,13 @@ class TaskConsumer(WebsocketConsumer):
 
     def log(self, event):
         log = event['log']
+        fruit_id = event['fruit_id']
+        count_fruit = event['count_fruit']
+        wallet_money = event['wallet_money']
 
         self.send(text_data=json.dumps({
-            'log': log
+            'log': log,
+            'fruit_id': fruit_id,
+            'count_fruit': count_fruit,
+            'wallet_money': wallet_money,
         }))
