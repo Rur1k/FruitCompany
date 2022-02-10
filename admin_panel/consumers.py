@@ -3,7 +3,7 @@ from channels.generic.websocket import WebsocketConsumer
 import json
 
 
-class WarehouseConsumer(WebsocketConsumer):
+class ChatConsumer(WebsocketConsumer):
     def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'warehouse_%s' % self.room_name
@@ -42,3 +42,22 @@ class WarehouseConsumer(WebsocketConsumer):
         }))
 
 
+class TaskConsumer(WebsocketConsumer):
+    def connect(self):
+        async_to_sync(self.channel_layer.group_add)(
+            'warehouse', self.channel_name
+        )
+
+        self.accept()
+
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            'warehouse', self.channel_name
+        )
+
+    def log(self, event):
+        log = event['log']
+
+        self.send(text_data=json.dumps({
+            'log': log
+        }))
