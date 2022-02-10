@@ -1,29 +1,23 @@
+import json
+
 from django.shortcuts import render
-from django.views.generic import ListView
+from django.utils.safestring import mark_safe
 
 from .models import Fruit, Wallet
-from .forms import FruitForm
-from .tasks import replenishment_warehouse
 
 
-class FruitView(ListView):
-    model = Fruit
-    template_name = 'fruit.html'
 
-    def get_queryset(self):
-        queryset = self.model.objects.all()
-
-        # replenishment_warehouse.delay()
-
-        return queryset
+def index(request):
+    return render(request, 'admin_panel/index.html')
 
 
-def main_page(request):
+def warehouse(request, room_name):
     fruits = Fruit.objects.all()
 
     data = {
         'object_list': fruits,
-        'wallet': Wallet.objects.get(pk=1)
+        'wallet': Wallet.objects.get(pk=1),
+        'room_name_json': mark_safe(json.dumps(room_name))
     }
-    return render(request, 'fruit.html', data)
+    return render(request, 'admin_panel/warehouse.html', data)
 

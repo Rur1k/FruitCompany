@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import FruitView, main_page
+from .views import index, warehouse
 
 urlpatterns = [
-    # path('', FruitView.as_view()),
-    path('', main_page)
+    path('', index, name='index'),
+    path('<str:room_name>/', warehouse, name='room')
 ]

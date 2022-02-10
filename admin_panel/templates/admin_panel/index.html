@@ -1,0 +1,14 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+{% block content %}
+<div class="col-md-5">
+    <input id="room-name-input" type="text" class="form-control col-md-5" value="warehouse" readonly>
+    <input id="room-name-submit" type="button" class="btn btn-primary col-md-5" value="Перейти на склад">
+</div>
+<script>
+    document.querySelector('#room-name-submit').onclick = function(e) {
+        var roomName = document.querySelector('#room-name-input').value;
+        window.location.pathname='/' + roomName + '/';
+    };
+</script>
+{% endblock %}

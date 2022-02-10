@@ -29,8 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # apps
+    'channels',
     'admin_panel',
-    # 'channels',
 ]
 
 MIDDLEWARE = [
@@ -128,13 +128,13 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 # Конфигурация Channels
 
-# ASGI_APPLICATION = "admin_panel.routing.application"
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],
-#             "symmetric_encryption_keys": [SECRET_KEY],
-#         },
-#     },
-# }
+ASGI_APPLICATION = 'FruitCompany.routing.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
