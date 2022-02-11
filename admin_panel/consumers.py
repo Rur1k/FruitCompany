@@ -1,5 +1,7 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
+from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money
+from .models import Wallet
 import json
 
 
@@ -43,6 +45,8 @@ class ChatConsumer(WebsocketConsumer):
 
 
 class TaskConsumer(WebsocketConsumer):
+    strict_ordering = True
+
     def connect(self):
         async_to_sync(self.channel_layer.group_add)(
             'warehouse', self.channel_name
@@ -55,15 +59,52 @@ class TaskConsumer(WebsocketConsumer):
             'warehouse', self.channel_name
         )
 
+    def receive(self, text_data=None, bytes_data=None):
+        text_data_json = json.loads(text_data)
+        count = text_data_json['count']
+        fruit_id = text_data_json['fruit_id']
+        event = text_data_json['event']
+
+        if event == 'buy':
+            manual_buy_fruit.delay(fruit_id, count)
+        else:
+            manual_sell_fruit.delay(fruit_id, count)
+
     def log(self, event):
         log = event['log']
         fruit_id = event['fruit_id']
-        count_fruit = event['count_fruit']
-        wallet_money = event['wallet_money']
+        wallet_money.delay()
 
         self.send(text_data=json.dumps({
             'log': log,
-            'fruit_id': fruit_id,
-            'count_fruit': count_fruit,
-            'wallet_money': wallet_money,
+        }))
+
+
+class WalletConsumer(WebsocketConsumer):
+    def connect(self):
+        async_to_sync(self.channel_layer.group_add)(
+            'wallet', self.channel_name
+        )
+
+        self.accept()
+
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            'wallet', self.channel_name
+        )
+
+    def receive(self, text_data=None, bytes_data=None):
+        text_data_json = json.loads(text_data)
+        money_sum = text_data_json['money_sum']
+        event = text_data_json['event']
+
+        if event == 'add':
+            add_wallet_money.delay(money_sum)
+        elif event == 'minus':
+            minus_wallet_money.delay(money_sum)
+
+    def wallet_update(self, event):
+        money = event['res']
+        self.send(text_data=json.dumps({
+            'wallet_money': money,
         }))

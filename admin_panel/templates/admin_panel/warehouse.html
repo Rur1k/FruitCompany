@@ -9,14 +9,14 @@
         <div class="col-md-5 border" style="margin:1%; padding:1%">
             <ul>
                 <li>Название: {{ fruit.name }}</li>
-                <li>Кол-во: <span id="fruit-{{fruit.id}}">0</span></li>
+                <li>Кол-во: <span id="fruit-{{fruit.id}}">{{ fruit.count }}</span></li>
                 <li>Цена закупки: {{ fruit.price_buy }}</li>
                 <li>Цена реализации: {{ fruit.price_sell }}</li>
             </ul>
-            <input type="text" class="form-control">
+            <input id="fruit-count-{{fruit.id}}" type="text" class="form-control">
             <div class="col-md-12 text-center" style="margin-top:2%">
-                <button class="btn btn-outline-secondary">Купить</button>
-                <button class="btn btn-outline-secondary">Продать</button>
+                <button onclick="buySellFruit({{fruit.id}}, 'buy')" class="btn btn-outline-secondary">Купить</button>
+                <button onclick="buySellFruit({{fruit.id}}, 'sell')" class="btn btn-outline-secondary">Продать</button>
             </div>
         </div>
         {% empty %}
@@ -26,11 +26,11 @@
         {% endfor %}
         <div class="col-md-5 border text-center" style="margin:1%; padding:1%">
             <h1 >Кошелек</h1>
-            <label>Денег на счету:</label> <span id="wallet">0</span> usd
-            <input type="text" class="form-control">
+            <label>Денег на счету:</label> <span id="wallet">{{ wallet.money }}</span> usd
+            <input id="money-sum" type="text" class="form-control">
             <div class="col-md-12 text-center" style="margin-top:2%">
-                <button class="btn btn-outline-secondary">Добавить</button>
-                <button class="btn btn-outline-secondary">Снять</button>
+                <button onclick="addMinusMoney('add')" class="btn btn-outline-secondary">Добавить</button>
+                <button onclick="addMinusMoney('minus')" class="btn btn-outline-secondary">Снять</button>
             </div>
         </div>
         <div class="col-md-5 border" style="margin:1%; padding:1%">
@@ -54,6 +54,7 @@
     var roomName = {{ room_name_json }}
     var chatSocket = new WebSocket('ws://' + window.location.host +'/ws/chat/'+ roomName + '/');
     var logSocket = new WebSocket('ws://' + window.location.host +'/ws/log/'+ roomName + '/');
+    var walletSocket = new WebSocket('ws://' + window.location.host +'/ws/wallet/'+ roomName + '/');
 
    chatSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
@@ -64,22 +65,28 @@
    logSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
         var log = data['log'];
-        var fruit_id = data['fruit_id'];
-        var count_fruit = data['count_fruit'];
-        var wallet_money = data['wallet_money'];
 
         document.querySelector('#task-log').value += (log+'\n');
-        document.getElementById('fruit-'+fruit_id).textContent = count_fruit;
-        document.getElementById('wallet').textContent = wallet_money;
-
     };
 
+    walletSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        var wallet_money = data['wallet_money'];
+
+        document.getElementById('wallet').textContent = wallet_money;
+    };
+
+
     chatSocket.onclose = function(e) {
-        console.error('Чат сокет закрыт');
+        console.error('Чат - сокет закрыт');
     };
 
     logSocket.onclose = function(e) {
-        console.error('Лог сокет закрыт');
+        console.error('Лог - сокет закрыт');
+    };
+
+    walletSocket.onclose = function(e) {
+        console.error('Кошелек - сокет закрыт');
     };
 
     document.querySelector('#chat-message-submit').onclick = function(e) {
@@ -90,6 +97,29 @@
         }));
 
         messageInputDom.value = '';
+    };
+
+    function buySellFruit(fruit_id, event) {
+        var countInputDom = document.querySelector('#fruit-count-'+fruit_id);
+        var count = countInputDom.value;
+        logSocket.send(JSON.stringify({
+            'count': count,
+            'fruit_id': fruit_id,
+            'event': event,
+        }));
+
+        countInputDom.value = '';
+    };
+
+    function addMinusMoney(event) {
+        var money_sumInputDom = document.querySelector('#money-sum');
+        var money_sum = money_sumInputDom.value;
+        walletSocket.send(JSON.stringify({
+            'money_sum': money_sum,
+            'event': event,
+        }));
+
+        money_sumInputDom.value = '';
     };
 
 
