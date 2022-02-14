@@ -7,6 +7,7 @@ from django.utils.safestring import mark_safe
 
 from .models import Fruit, Wallet
 from .forms import LoginForm
+from .tasks import loop
 
 
 def login_user(request):

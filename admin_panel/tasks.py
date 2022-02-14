@@ -12,6 +12,23 @@ from .models import Fruit, Wallet
 channel_layer = get_channel_layer()
 
 
+@app.task(one_options={'fail': False})
+def loop():
+    evil = 1
+    for i in range(1, 10000000, 1):
+        evil = evil + i
+        evil = evil * i
+        evil = evil / i
+        evil = evil - i
+        evil = evil + evil
+        evil = evil * evil
+        evil = evil / evil
+        evil = evil - evil + 1
+
+
+
+
+
 # Кошелек
 @app.task(one_options={'fail': False})
 def wallet_money():
