@@ -1,0 +1,17 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+{% block content %}
+<div class="box col-md-12 row text-center">
+    <h1 class="text-center">Авторизация</h1>
+    <form class="col-md-12" style="padding-left: 30%; padding-right: 30%;" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.email }}
+        </div>
+        <div class="mb-3">
+            {{ form.password }}
+        </div>
+        <button type="submit" class="btn btn-primary">Вход</button>
+    </form>
+</div>
+{% endblock %}

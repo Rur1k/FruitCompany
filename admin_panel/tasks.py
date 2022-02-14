@@ -1,5 +1,6 @@
 import random
-from time import sleep
+
+from datetime import datetime
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -86,7 +87,7 @@ def manual_buy_fruit(fruit_id, add):
         money = wallet.money - (add * obj.price_buy)
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
-        result = f'SUCCESS: Склад пополнен на {add} {obj.name}! Заплачено: {add * obj.price_buy} usd - пользователь'
+        result = f'{datetime.now()} SUCCESS: Склад пополнен на {add} {obj.name}! Заплачено: {add * obj.price_buy} usd - пользователь'
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',
@@ -108,13 +109,13 @@ def manual_sell_fruit(fruit_id, count_sell):
     count_sell = int(count_sell)
 
     if count_sell > obj.count:
-        result = f'ERROR: Невозможно продать {count_sell} {obj.name}! Недостаток на складе. - пользователь'
+        result = f'{datetime.now()} ERROR: Невозможно продать {count_sell} {obj.name}! Недостаток на складе. - пользователь'
     else:
         count = obj.count - count_sell
         money = wallet.money + count_sell * obj.price_sell
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
-        result = f'SUCCESS: Продано {count_sell} {obj.name}! Заработано: {count_sell * obj.price_sell} usd - пользователь'
+        result = f'{datetime.now()} SUCCESS: Продано {count_sell} {obj.name}! Заработано: {count_sell * obj.price_sell} usd - пользователь'
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',
@@ -136,13 +137,13 @@ def replenishment_warehouse_fruit(fruit_id, start=None, stop=None, step=None):
 
     add = random.randrange(start, stop, step)
     if (add * obj.price_buy) > wallet.money:
-        result = f'ERRORS: Не достаточно денег для закупки {add} {obj.name}!'
+        result = f'{datetime.now()} ERRORS: Не достаточно денег для закупки {add} {obj.name}!'
     else:
         count = obj.count + add
         money = wallet.money - (add * obj.price_buy)
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
-        result = f'SUCCESS: Склад пополнен на {add} {obj.name}! Заплачено:{add * obj.price_buy} usd'
+        result = f'{datetime.now()} SUCCESS: Склад пополнен на {add} {obj.name}! Заплачено:{add * obj.price_buy} usd'
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',
@@ -162,13 +163,13 @@ def sell_fruit(fruit_id, start=None, stop=None, step=None):
 
     count_sell = random.randrange(start, stop, step)
     if count_sell > obj.count:
-        result = f'ERROR: Невозможно продать {count_sell} {obj.name}! Недостаток на складе.'
+        result = f'{datetime.now()} ERROR: Невозможно продать {count_sell} {obj.name}! Недостаток на складе.'
     else:
         count = obj.count - count_sell
         money = wallet.money + count_sell * obj.price_sell
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
-        result = f'SUCCESS: Продано {count_sell} {obj.name}! Заработано: {count_sell * obj.price_sell} usd '
+        result = f'{datetime.now()} SUCCESS: Продано {count_sell} {obj.name}! Заработано: {count_sell * obj.price_sell} usd '
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',

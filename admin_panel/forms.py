@@ -1,8 +1,13 @@
 from django import forms
-from .models import Fruit
+from django.contrib.auth.models import User
 
 
-class FruitForm(forms.ModelForm):
-    class Meta:
-        model = Fruit
-        fields = '__all__'
+class LoginForm(forms.Form):
+    email = forms.CharField(widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'E-mail',
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Пароль',
+    }))
