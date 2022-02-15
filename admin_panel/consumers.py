@@ -1,6 +1,6 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money
+from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money, loop
 from .models import Wallet
 import json
 
@@ -107,4 +107,36 @@ class WalletConsumer(WebsocketConsumer):
         money = event['res']
         self.send(text_data=json.dumps({
             'wallet_money': money,
+        }))
+
+
+class LoopConsumer(WebsocketConsumer):
+    def connect(self):
+        async_to_sync(self.channel_layer.group_add)(
+            'loop', self.channel_name
+        )
+
+        self.accept()
+
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            'loop', self.channel_name
+        )
+
+    def receive(self, text_data=None, bytes_data=None):
+        loop.delay()
+
+    def result_loop(self, event):
+        state = event['state']
+        fruit_1 = event['fruit_1']
+        fruit_2 = event['fruit_2']
+        fruit_3 = event['fruit_3']
+        fruit_4 = event['fruit_4']
+        self.send(text_data=json.dumps({
+            'res': state,
+            'fruit_1': fruit_1,
+            'fruit_2': fruit_2,
+            'fruit_3': fruit_3,
+            'fruit_4': fruit_4,
+
         }))

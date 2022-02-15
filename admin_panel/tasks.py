@@ -6,14 +6,15 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from FruitCompany.celery import app
 from celery import shared_task
+from celery_singleton import Singleton
 
 from .models import Fruit, Wallet
 
 channel_layer = get_channel_layer()
 
 
-@app.task(one_options={'fail': False})
-def loop():
+@shared_task(base=Singleton, bind=True, track_started=True, queue='LoopQueue')
+def loop(self):
     evil = 1
     for i in range(1, 10000000, 1):
         evil = evil + i
@@ -25,12 +26,26 @@ def loop():
         evil = evil / evil
         evil = evil - evil + 1
 
+    fruit_1 = Fruit.objects.get(pk=1)
+    fruit_2 = Fruit.objects.get(pk=2)
+    fruit_3 = Fruit.objects.get(pk=3)
+    fruit_4 = Fruit.objects.get(pk=4)
 
-
+    async_to_sync(channel_layer.group_send)(
+        'loop',
+        {
+            'type': 'result_loop',
+            'state': 'Склад обновлен.',
+            'fruit_1': fruit_1.count,
+            'fruit_2': fruit_2.count,
+            'fruit_3': fruit_3.count,
+            'fruit_4': fruit_4.count,
+        }
+    )
 
 
 # Кошелек
-@app.task(one_options={'fail': False})
+@shared_task(queue='WalletQueue')
 def wallet_money():
     wallet = Wallet.objects.get(pk=1)
 
@@ -43,8 +58,8 @@ def wallet_money():
     )
 
 
-@app.task(one_options={'fail': False})
-def add_wallet_money(money_sum):
+@shared_task(bind=True, track_started=True, queue='WalletQueue')
+def add_wallet_money(self, money_sum):
     wallet = Wallet.objects.get(pk=1)
     new_sum = wallet.money + float(money_sum)
     Wallet.objects.filter(pk=1).update(money=new_sum)
@@ -58,8 +73,8 @@ def add_wallet_money(money_sum):
     )
 
 
-@app.task(one_options={'fail': False})
-def minus_wallet_money(money_sum):
+@shared_task(bind=True, track_started=True, queue='WalletQueue')
+def minus_wallet_money(self, money_sum):
     wallet = Wallet.objects.get(pk=1)
     if wallet.money >= float(money_sum):
         new_sum = wallet.money - float(money_sum)
@@ -76,8 +91,8 @@ def minus_wallet_money(money_sum):
     )
 
 
-@app.task(one_options={'fail': False})
-def fruit_count(fruit_id):
+@shared_task(bind=True, track_started=True)
+def fruit_count(self, fruit_id):
     fruit = Fruit.objects.get(pk=fruit_id)
 
     async_to_sync(channel_layer.group_send)(
@@ -92,8 +107,8 @@ def fruit_count(fruit_id):
 # Ручной запуск
 # Пополнение склада
 
-@app.task(one_options={'fail': False})
-def manual_buy_fruit(fruit_id, add):
+@shared_task(bind=True, track_started=True, queue='FruitQueue')
+def manual_buy_fruit(self, fruit_id, add):
     obj = Fruit.objects.get(pk=fruit_id)
     wallet = Wallet.objects.get(pk=1)
     add = int(add)
@@ -118,8 +133,8 @@ def manual_buy_fruit(fruit_id, add):
 
 # Продажа фруктов
 
-@app.task(one_options={'fail': False})
-def manual_sell_fruit(fruit_id, count_sell):
+@shared_task(bind=True, track_started=True, queue='FruitQueue')
+def manual_sell_fruit(self, fruit_id, count_sell):
     obj = Fruit.objects.get(pk=fruit_id)
     wallet = Wallet.objects.get(pk=1)
 
@@ -147,8 +162,8 @@ def manual_sell_fruit(fruit_id, count_sell):
 # beats
 # Пополнение склада
 
-@app.task(one_options={'fail': False})
-def replenishment_warehouse_fruit(fruit_id, start=None, stop=None, step=None):
+@shared_task(bind=True, track_started=True, queue='FruitQueue')
+def replenishment_warehouse_fruit(self, fruit_id, start=None, stop=None, step=None):
     obj = Fruit.objects.get(pk=fruit_id)
     wallet = Wallet.objects.get(pk=1)
 
@@ -173,8 +188,8 @@ def replenishment_warehouse_fruit(fruit_id, start=None, stop=None, step=None):
 
 
 # Продажа фруктов
-@app.task(one_options={'fail': False})
-def sell_fruit(fruit_id, start=None, stop=None, step=None):
+@shared_task(bind=True, track_started=True, queue='FruitQueue')
+def sell_fruit(self, fruit_id, start=None, stop=None, step=None):
     obj = Fruit.objects.get(pk=fruit_id)
     wallet = Wallet.objects.get(pk=1)
 

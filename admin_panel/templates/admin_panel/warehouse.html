@@ -38,7 +38,7 @@
             <textarea class="form-control" style="height:100%; resize:none" readonly></textarea>
         </div>
         <div class="col-md-8">
-            <button class="btn btn-primary">Начать проверку склада</button>
+            <button id="startLoop" class="btn btn-primary">Начать проверку склада</button>
         </div>
     </div>
     <div class="col-md-4">
@@ -59,6 +59,7 @@
     var chatSocket = new WebSocket('ws://' + window.location.host +'/ws/chat/'+ roomName + '/');
     var logSocket = new WebSocket('ws://' + window.location.host +'/ws/log/'+ roomName + '/');
     var walletSocket = new WebSocket('ws://' + window.location.host +'/ws/wallet/'+ roomName + '/');
+    var loopSocket = new WebSocket('ws://' + window.location.host +'/ws/loop/'+ roomName + '/');
 
    chatSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
@@ -93,6 +94,10 @@
         console.error('Кошелек - сокет закрыт');
     };
 
+    loopSocket.onclose = function(e) {
+        console.error('Проверка склада - сокет закрыт');
+    };
+
     document.querySelector('#chat-message-submit').onclick = function(e) {
         var messageInputDom = document.querySelector('#chat-message-input');
         var message = messageInputDom.value;
@@ -101,8 +106,6 @@
         }));
 
         messageInputDom.value = '';
-
-        toastr.warning("ewer","wer");
     };
 
     function buySellFruit(fruit_id, event) {
@@ -128,6 +131,21 @@
         money_sumInputDom.value = '';
     };
 
+    document.querySelector('#startLoop').onclick = function(e) {
+        loopSocket.send(JSON.stringify());
+
+        toastr.info("Проверка склада началась.");
+    };
+
+    loopSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        var res = data['res'];
+        document.getElementById('fruit-1').textContent = data['fruit_1']
+        document.getElementById('fruit-2').textContent = data['fruit_2']
+        document.getElementById('fruit-3').textContent = data['fruit_3']
+        document.getElementById('fruit-4').textContent = data['fruit_4']
+        toastr.success(res);
+    };
 
 </script>
 {% endblock %}

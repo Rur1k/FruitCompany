@@ -5,21 +5,17 @@ from celery.schedules import crontab
 
 from datetime import timedelta
 
+from kombu import Queue
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'FruitCompany.settings')
 
 app = Celery('FruitCompany')
 app.config_from_object('django.conf:settings', namespace='CELERY')
-app.conf.update(
-    task_routes={
-        'admin_panel.tasks.replenishment_warehouse_fruit': {'queue': 'FruitQueue'},
-        'admin_panel.tasks.sell_fruit': {'queue': 'FruitQueue'},
-        'admin_panel.tasks.manual_buy_fruit': {'queue': 'FruitQueue'},
-        'admin_panel.tasks.manual_sell_fruit': {'queue': 'FruitQueue'},
-        'admin_panel.tasks.wallet_money': {'queue': 'WalletQueue'},
-        'admin_panel.tasks.add_wallet_money': {'queue': 'WalletQueue'},
-        'admin_panel.tasks.minus_wallet_money': {'queue': 'WalletQueue'},
-    }
-)
+app.conf.task_queues = [
+    Queue('FruitQueue', routing_key='FruitQueue'),
+    Queue('WalletQueue', routing_key='WalletQueue'),
+    Queue('LoopQueue', routing_key='LoopQueue')
+]
 
 app.autodiscover_tasks()
 

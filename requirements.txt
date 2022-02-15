@@ -1,6 +1,7 @@
 Django==3.2.4
 python-dotenv
 celery
+celery-singleton
 redis
 flower
 channels
