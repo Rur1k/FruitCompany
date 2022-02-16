@@ -37,14 +37,17 @@
         <div class="col-md-5 border" style="margin:1%; padding:1%">
             <textarea class="form-control" style="height:100%; resize:none" readonly></textarea>
         </div>
+        {% if request.user.is_authenticated %}
         <div class="col-md-8">
             <button id="startLoop" class="btn btn-primary">Начать проверку склада</button>
         </div>
+        {% endif %}
     </div>
     <div class="col-md-4">
         <textarea id="task-log" class="form-control" style="height:100%; resize:none" readonly></textarea>
     </div>
 </div>
+{% if request.user.is_authenticated %}
 <div class="col-md-12">
     <div class="col-md-6 border text-center" style="margin:1%; padding:1%">
         <textarea id="chat-log" cols="20" rows="10" class="form-control" style="resize:none" readonly></textarea>
@@ -52,6 +55,7 @@
         <input id="chat-message-submit" type="button" value="Send" class="btn btn-primary">
     </div>
 </div>
+{% endif %}
 <script>
     <!--    Работа чата -->
 
@@ -64,7 +68,8 @@
    chatSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
         var message = data['message'];
-        document.querySelector('#chat-log').value += (message+'\n');
+        var user = data['user'];
+        document.querySelector('#chat-log').value += (user+': '+message+'\n');
     };
 
    logSocket.onmessage = function(e) {
@@ -73,6 +78,10 @@
 
         document.querySelector('#task-log').value += (log+'\n');
     };
+
+    {% for obj in messages %}
+        document.querySelector('#chat-log').value += ('{{obj.user.username}}'+': '+'{{obj.message}}'+'\n');
+    {% endfor %}
 
     walletSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
@@ -102,7 +111,8 @@
         var messageInputDom = document.querySelector('#chat-message-input');
         var message = messageInputDom.value;
         chatSocket.send(JSON.stringify({
-            'message': message
+            'message': message,
+            'user': {{ request.user.id }},
         }));
 
         messageInputDom.value = '';

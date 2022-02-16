@@ -1,14 +1,16 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money, loop
-from .models import Wallet
+from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money, loop, chatHistory
+from .models import Wallet, ChatMessage
+from django.contrib.auth.models import User
+
 import json
 
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'warehouse_%s' % self.room_name
+        self.room_group_name = 'chat'
 
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -26,21 +28,30 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
+        user_id = text_data_json['user']
+
+        user = User.objects.get(pk=user_id)
+        ChatMessage.objects.create(user=user, message=message)
 
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message
+                'message': message,
+                'user': user_id,
             }
         )
 
     def chat_message(self, event):
         message = event['message']
+        user_id = event['user']
+
+        user = User.objects.get(pk=user_id)
 
         self.send(text_data=json.dumps({
             'event': "Send",
-            'message': message
+            'message': message,
+            'user': user.username
         }))
 
 

@@ -1,6 +1,9 @@
 import random
+import requests
 
 from datetime import datetime
+
+from django.contrib.auth.models import User
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -8,9 +11,53 @@ from FruitCompany.celery import app
 from celery import shared_task
 from celery_singleton import Singleton
 
-from .models import Fruit, Wallet
+
+from bs4 import BeautifulSoup
+
+from .models import Fruit, Wallet, ChatMessage
 
 channel_layer = get_channel_layer()
+
+
+@shared_task(bind=True, track_started=True, queue='WalletQueue')
+def parserJoke(self):
+    url = 'https://tproger.ru/wp-content/plugins/citation-widget/get-quote.php'
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'lxml')
+    joke = soup.p.text
+
+    print(joke)
+    print(len(joke))
+
+    user = User.objects.get(username='joker')
+    ChatMessage.objects.create(user=user, message=joke)
+
+    async_to_sync(channel_layer.group_send)(
+        'chat',
+        {
+            'type': 'chat_message',
+            'message': joke,
+            'user': user.pk
+        }
+    )
+
+
+@shared_task(bind=True, track_started=True, queue='WalletQueue')
+def chatHistory(self):
+    message_list = ChatMessage.objects.all()[:40]
+    messages = []
+    for obj in message_list:
+        messages.insert(0, obj)
+
+    for mess in messages:
+        async_to_sync(channel_layer.group_send)(
+            'chat',
+            {
+                'type': 'chat_message',
+                'message': mess.message,
+                'user': mess.user.pk
+            }
+        )
 
 
 @shared_task(base=Singleton, bind=True, track_started=True, queue='LoopQueue')

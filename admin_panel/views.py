@@ -5,9 +5,9 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.utils.safestring import mark_safe
 
-from .models import Fruit, Wallet
+from .models import Fruit, Wallet, ChatMessage
 from .forms import LoginForm
-from .tasks import loop
+from .tasks import parserJoke
 
 
 def login_user(request):
@@ -47,9 +47,15 @@ def warehouse(request):
     fruits = Fruit.objects.all()
     room_name = 'warehouse'
 
+    message_list = ChatMessage.objects.all()[:40]
+    messages = []
+    for obj in message_list:
+        messages.insert(0, obj)
+
     data = {
         'object_list': fruits,
         'wallet': Wallet.objects.get(pk=1),
-        'room_name_json': mark_safe(json.dumps(room_name))
+        'room_name_json': mark_safe(json.dumps(room_name)),
+        'messages': messages
     }
     return render(request, 'admin_panel/warehouse.html', data)

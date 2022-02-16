@@ -1,7 +1,9 @@
 import os
 
+
 from celery import Celery
 from celery.schedules import crontab
+
 
 from datetime import timedelta
 
@@ -60,4 +62,9 @@ app.conf.beat_schedule = {
         'schedule': timedelta(seconds=6),
         'args': (4, 1, 20, 1),
     },
+    'joker': {
+        'task': 'admin_panel.tasks.parserJoke',
+        'schedule': timedelta(seconds=30),
+    },
 }
+
