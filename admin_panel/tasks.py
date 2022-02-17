@@ -1,4 +1,6 @@
 import random
+from time import sleep
+
 import requests
 
 from datetime import datetime
@@ -19,15 +21,16 @@ from .models import Fruit, Wallet, ChatMessage
 channel_layer = get_channel_layer()
 
 
-@shared_task(bind=True, track_started=True, queue='WalletQueue')
-def parserJoke(self):
+@shared_task(bind=True, track_started=True, queue='JokerQueue')
+def parserJoke(self, wait=10):
     url = 'https://tproger.ru/wp-content/plugins/citation-widget/get-quote.php'
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'lxml')
     joke = soup.p.text
 
+    print('Ожидание:' + str(wait))
+    sleep(wait)
     print(joke)
-    print(len(joke))
 
     user = User.objects.get(username='joker')
     ChatMessage.objects.create(user=user, message=joke)
@@ -41,8 +44,10 @@ def parserJoke(self):
         }
     )
 
+    parserJoke(wait=len(joke))
 
-@shared_task(bind=True, track_started=True, queue='WalletQueue')
+
+@shared_task(base=Singleton, bind=True, track_started=True, queue='DefaultQueue')
 def chatHistory(self):
     message_list = ChatMessage.objects.all()[:40]
     messages = []
@@ -91,6 +96,25 @@ def loop(self):
     )
 
 
+@shared_task(base=Singleton, bind=True, track_started=True, queue='DefaultQueue')
+def get_status(self, run=False):
+    if run:
+        state = 'Running'
+        message = 'Задача уже выполняеться'
+    else:
+        state = 'Start'
+        message = 'Проверка склада начата!'
+
+    async_to_sync(channel_layer.group_send)(
+        'loopStatus',
+        {
+            'type': 'get_status_res',
+            'state': state,
+            'message': message,
+        }
+    )
+
+
 # Кошелек
 @shared_task(queue='WalletQueue')
 def wallet_money():
@@ -105,7 +129,7 @@ def wallet_money():
     )
 
 
-@shared_task(bind=True, track_started=True, queue='WalletQueue')
+@shared_task(bind=True, track_started=True, queue='DefaultQueue')
 def add_wallet_money(self, money_sum):
     wallet = Wallet.objects.get(pk=1)
     new_sum = wallet.money + float(money_sum)
@@ -120,7 +144,7 @@ def add_wallet_money(self, money_sum):
     )
 
 
-@shared_task(bind=True, track_started=True, queue='WalletQueue')
+@shared_task(bind=True, track_started=True, queue='DefaultQueue')
 def minus_wallet_money(self, money_sum):
     wallet = Wallet.objects.get(pk=1)
     if wallet.money >= float(money_sum):

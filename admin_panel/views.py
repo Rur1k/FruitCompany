@@ -47,6 +47,7 @@ def warehouse(request):
     fruits = Fruit.objects.all()
     room_name = 'warehouse'
 
+    parserJoke.delay()
     message_list = ChatMessage.objects.all()[:40]
     messages = []
     for obj in message_list:

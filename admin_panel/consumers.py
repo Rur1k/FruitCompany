@@ -1,13 +1,17 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money, loop, chatHistory
+from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money, loop, \
+    chatHistory, parserJoke, get_status
 from .models import Wallet, ChatMessage
 from django.contrib.auth.models import User
+from FruitCompany.celery import app
 
 import json
 
 
 class ChatConsumer(WebsocketConsumer):
+    process_id = None
+
     def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat'
@@ -16,14 +20,16 @@ class ChatConsumer(WebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-
         self.accept()
+        process = parserJoke.delay()
+        self.process_id = process.id
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
         )
+        app.control.revoke(self.process_id, terminate=True)
 
     def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
@@ -62,7 +68,6 @@ class TaskConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_add)(
             'warehouse', self.channel_name
         )
-
         self.accept()
 
     def disconnect(self, close_code):
@@ -122,6 +127,8 @@ class WalletConsumer(WebsocketConsumer):
 
 
 class LoopConsumer(WebsocketConsumer):
+    process_id = None
+
     def connect(self):
         async_to_sync(self.channel_layer.group_add)(
             'loop', self.channel_name
@@ -135,7 +142,12 @@ class LoopConsumer(WebsocketConsumer):
         )
 
     def receive(self, text_data=None, bytes_data=None):
-        loop.delay()
+        if self.process_id is None:
+            process = loop.delay()
+            self.process_id = process.id
+            get_status.delay()
+        else:
+            get_status.delay(run=True)
 
     def result_loop(self, event):
         state = event['state']
@@ -143,6 +155,9 @@ class LoopConsumer(WebsocketConsumer):
         fruit_2 = event['fruit_2']
         fruit_3 = event['fruit_3']
         fruit_4 = event['fruit_4']
+
+        self.process_id = None
+
         self.send(text_data=json.dumps({
             'res': state,
             'fruit_1': fruit_1,
@@ -150,4 +165,29 @@ class LoopConsumer(WebsocketConsumer):
             'fruit_3': fruit_3,
             'fruit_4': fruit_4,
 
+        }))
+
+
+class LoopStatusConsumer(WebsocketConsumer):
+    process_id = None
+
+    def connect(self):
+        async_to_sync(self.channel_layer.group_add)(
+            'loopStatus', self.channel_name
+        )
+
+        self.accept()
+
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            'loopStatus', self.channel_name
+        )
+
+    def get_status_res(self, event):
+        state = event['state']
+        message = event['message']
+
+        self.send(text_data=json.dumps({
+            'state': state,
+            'message': message,
         }))

@@ -15,8 +15,9 @@ app = Celery('FruitCompany')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.task_queues = [
     Queue('FruitQueue', routing_key='FruitQueue'),
-    Queue('WalletQueue', routing_key='WalletQueue'),
-    Queue('LoopQueue', routing_key='LoopQueue')
+    Queue('DefaultQueue', routing_key='DefaultQueue'),
+    Queue('LoopQueue', routing_key='LoopQueue'),
+    Queue('JokerQueue', routing_key='JokerQueue'),
 ]
 
 app.autodiscover_tasks()
@@ -61,10 +62,6 @@ app.conf.beat_schedule = {
         'task': 'admin_panel.tasks.sell_fruit',
         'schedule': timedelta(seconds=6),
         'args': (4, 1, 20, 1),
-    },
-    'joker': {
-        'task': 'admin_panel.tasks.parserJoke',
-        'schedule': timedelta(seconds=30),
     },
 }
 
