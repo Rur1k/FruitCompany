@@ -34,8 +34,8 @@
             </div>
 
         </div>
-        <div class="col-md-5 border" style="margin:1%; padding:1%">
-            <textarea class="form-control" style="height:100%; resize:none" readonly></textarea>
+        <div id="log-last-task" class="col-md-5 border" style="margin:1%; padding:1%">
+
         </div>
         {% if request.user.is_authenticated %}
         <div class="col-md-8">
@@ -51,8 +51,14 @@
 <div class="col-md-12">
     <div class="col-md-6 border text-center" style="margin:1%; padding:1%">
         <textarea id="chat-log" cols="20" rows="10" class="form-control" style="resize:none" readonly></textarea>
-        <input id="chat-message-input" type="text" size="100" class="form-control">
-        <input id="chat-message-submit" type="button" value="Send" class="btn btn-primary">
+        <div class="col-md-12 row">
+            <div class="col-md-11">
+                <input id="chat-message-input" type="text" size="100" class="form-control">
+            </div>
+            <div class="col-md-1">
+                <input id="chat-message-submit" type="button" value="Send" class="btn btn-primary">
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -78,6 +84,7 @@
         var log = data['log'];
 
         document.querySelector('#task-log').value += (log+'\n');
+        document.getElementById('fruit-'+data['fruit_id']).textContent = data['fruit_count']
     };
 
     {% for obj in messages %}
@@ -112,6 +119,11 @@
         console.error('Статус склада - сокет закрыт');
     };
 
+    document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
 
     document.querySelector('#chat-message-submit').onclick = function(e) {
         var messageInputDom = document.querySelector('#chat-message-input');
@@ -172,6 +184,19 @@
             toastr.warning(message);
         }
     };
+
+    <!--    AJAX-->
+    function SelectLog() {
+      var url = {% url 'select_log' %};
+      $.ajax({
+        url: url,
+        success: function (data) {
+          $("#log-last-task").html(data);
+        }
+      });
+    };
+
+    setInterval(SelectLog, 10000);
 
 </script>
 {% endblock %}

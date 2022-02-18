@@ -2,7 +2,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from .tasks import manual_buy_fruit, manual_sell_fruit, wallet_money, add_wallet_money, minus_wallet_money, loop, \
     chatHistory, parserJoke, get_status
-from .models import Wallet, ChatMessage
+from .models import Wallet, ChatMessage, Fruit
 from django.contrib.auth.models import User
 from FruitCompany.celery import app
 
@@ -93,6 +93,8 @@ class TaskConsumer(WebsocketConsumer):
 
         self.send(text_data=json.dumps({
             'log': log,
+            'fruit_id': fruit_id,
+            'fruit_count': Fruit.objects.get(pk=fruit_id).count
         }))
 
 

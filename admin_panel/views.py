@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.utils.safestring import mark_safe
 
-from .models import Fruit, Wallet, ChatMessage
+from .models import Fruit, Wallet, ChatMessage, TaskTime
 from .forms import LoginForm
 from .tasks import parserJoke
 
@@ -60,3 +60,8 @@ def warehouse(request):
         'messages': messages
     }
     return render(request, 'admin_panel/warehouse.html', data)
+
+
+def ajax_select_log(request):
+    logs = TaskTime.objects.all()
+    return render(request, 'admin_panel/ajax/select_log.html', {'logs': logs})

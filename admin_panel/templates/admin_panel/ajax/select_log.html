@@ -1,0 +1,6 @@
+Последние обновления:
+<ul>
+    {% for log in logs %}
+    <li>{{ log.name }}: {{ log.last_time | date:'d.m H:i:s' }}</li>
+    {% endfor %}
+</ul>

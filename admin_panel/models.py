@@ -25,3 +25,9 @@ class ChatMessage(models.Model):
 
     class Meta:
         ordering = ['-pk']
+
+
+class TaskTime(models.Model):
+    task = models.CharField(max_length=64)
+    last_time = models.DateTimeField()
+    name = models.CharField(max_length=128, null=True, blank=True)

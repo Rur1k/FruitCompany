@@ -16,7 +16,7 @@ from celery_singleton import Singleton
 
 from bs4 import BeautifulSoup
 
-from .models import Fruit, Wallet, ChatMessage
+from .models import Fruit, Wallet, ChatMessage, TaskTime
 
 channel_layer = get_channel_layer()
 
@@ -83,6 +83,8 @@ def loop(self):
     fruit_3 = Fruit.objects.get(pk=3)
     fruit_4 = Fruit.objects.get(pk=4)
 
+    TaskTime.objects.filter(task='loop').update(last_time=datetime.now())
+
     async_to_sync(channel_layer.group_send)(
         'loop',
         {
@@ -116,10 +118,10 @@ def get_status(self, run=False):
 
 
 # Кошелек
-@shared_task(queue='WalletQueue')
+@shared_task(queue='DefaultQueue')
 def wallet_money():
     wallet = Wallet.objects.get(pk=1)
-
+    TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
     async_to_sync(channel_layer.group_send)(
         'wallet',
         {
@@ -134,7 +136,7 @@ def add_wallet_money(self, money_sum):
     wallet = Wallet.objects.get(pk=1)
     new_sum = wallet.money + float(money_sum)
     Wallet.objects.filter(pk=1).update(money=new_sum)
-
+    TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
     async_to_sync(channel_layer.group_send)(
         'wallet',
         {
@@ -150,6 +152,7 @@ def minus_wallet_money(self, money_sum):
     if wallet.money >= float(money_sum):
         new_sum = wallet.money - float(money_sum)
         Wallet.objects.filter(pk=1).update(money=new_sum)
+        TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
     else:
         new_sum = wallet.money
 
@@ -191,7 +194,8 @@ def manual_buy_fruit(self, fruit_id, add):
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
         result = f'{datetime.now()} SUCCESS: Склад пополнен на {add} {obj.name}! Заплачено: {add * obj.price_buy} usd - пользователь'
-
+        TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
+        TaskTime.objects.filter(task='buy_fruit').update(last_time=datetime.now())
     async_to_sync(channel_layer.group_send)(
         'warehouse',
         {
@@ -219,6 +223,8 @@ def manual_sell_fruit(self, fruit_id, count_sell):
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
         result = f'{datetime.now()} SUCCESS: Продано {count_sell} {obj.name}! Заработано: {count_sell * obj.price_sell} usd - пользователь'
+        TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
+        TaskTime.objects.filter(task='sell_fruit').update(last_time=datetime.now())
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',
@@ -247,6 +253,8 @@ def replenishment_warehouse_fruit(self, fruit_id, start=None, stop=None, step=No
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
         result = f'{datetime.now()} SUCCESS: Склад пополнен на {add} {obj.name}! Заплачено:{add * obj.price_buy} usd'
+        TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
+        TaskTime.objects.filter(task='buy_fruit').update(last_time=datetime.now())
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',
@@ -273,6 +281,8 @@ def sell_fruit(self, fruit_id, start=None, stop=None, step=None):
         Fruit.objects.filter(pk=fruit_id).update(count=count)
         Wallet.objects.filter(pk=1).update(money=money)
         result = f'{datetime.now()} SUCCESS: Продано {count_sell} {obj.name}! Заработано: {count_sell * obj.price_sell} usd '
+        TaskTime.objects.filter(task='wallet').update(last_time=datetime.now())
+        TaskTime.objects.filter(task='sell_fruit').update(last_time=datetime.now())
 
     async_to_sync(channel_layer.group_send)(
         'warehouse',
