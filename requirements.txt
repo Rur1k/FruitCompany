@@ -9,4 +9,5 @@ channels-redis
 lxml
 requests
 beautifulsoup4
+uvicorn[standard]
 
