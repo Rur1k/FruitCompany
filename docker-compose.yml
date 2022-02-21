@@ -34,12 +34,59 @@ services:
         volumes:
             - ./static/:/static/
 
-    celery_worker_1:
+    celery_worker_fruit:
         restart: always
         build:
             context: .
-        command: celery -A FruitCompany worker -l info -Q FruitQueue -c 1
+        command:
+            sh -c "celery -A FruitCompany worker -l info -Q FruitQueue -c 1"
         volumes:
             - ./:/usr/src/app
         depends_on:
             - redis
+
+    celery_worker_default:
+        restart: always
+        build:
+            context: .
+        command:
+            sh -c "celery -A FruitCompany worker -l info -Q DefaultQueue"
+        volumes:
+            - ./:/usr/src/app
+        depends_on:
+            - redis
+
+    celery_worker_loop:
+        restart: always
+        build:
+            context: .
+        command:
+            sh -c "celery -A FruitCompany worker -l info -Q LoopQueue -c 1"
+        volumes:
+            - ./:/usr/src/app
+        depends_on:
+            - redis
+
+    celery_worker_joker:
+        restart: always
+        build:
+            context: .
+        command:
+            sh -c "celery -A FruitCompany worker -l info -Q JokerQueue -c 1"
+        volumes:
+            - ./:/usr/src/app
+        depends_on:
+            - redis
+
+
+    celery_beat:
+        restart: always
+        build:
+            context: .
+        command:
+            sh -c "celery -A FruitCompany beat -l info"
+        volumes:
+            - ./:/usr/src/app
+        depends_on:
+            - redis
+            - celery_worker_fruit

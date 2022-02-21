@@ -66,12 +66,12 @@
     <!--    Работа чата -->
 
     var roomName = {{ room_name_json }}
-    var chatSocket = new WebSocket('ws://' + window.location.host +'/ws/chat/'+ roomName + '/');
-    var logSocket = new WebSocket('ws://' + window.location.host +'/ws/log/'+ roomName + '/');
-    var walletSocket = new WebSocket('ws://' + window.location.host +'/ws/wallet/'+ roomName + '/');
-    var loopSocket = new WebSocket('ws://' + window.location.host +'/ws/loop/'+ roomName + '/');
-    var loopStatusSocket = new WebSocket('ws://' + window.location.host +'/ws/loopStatus/'+ roomName + '/');
-
+    var chatSocket = new WebSocket('ws://' + window.location.host+':8000' +'/ws/chat/'+ roomName + '/');
+    var logSocket = new WebSocket('ws://' + window.location.host+':8000' +'/ws/log/'+ roomName + '/');
+    var walletSocket = new WebSocket('ws://' + window.location.host+':8000' +'/ws/wallet/'+ roomName + '/');
+    var loopSocket = new WebSocket('ws://' + window.location.host+':8000' +'/ws/loop/'+ roomName + '/');
+    var loopStatusSocket = new WebSocket('ws://' + window.location.host+':8000' +'/ws/loopStatus/'+ roomName + '/');
+    console.log(window.location.host)
    chatSocket.onmessage = function(e) {
         var data = JSON.parse(e.data);
         var message = data['message'];
